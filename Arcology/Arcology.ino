@@ -1,5 +1,6 @@
 #include <LiquidCrystal_I2C.h>
 #include <IRremoteESP8266.h>
+#include <EEPROM.h>
 #include <IRsend.h>
 #include "ir.h"
 
@@ -110,6 +111,9 @@ private:
     int pin;
     int state; // 0 released 1 pressed
     int oldState;
+    bool isLongPressed;
+    bool triggerLongPressed;
+    Trigger* lpTrigger;
 
 public:
 
@@ -117,6 +121,9 @@ public:
         this->pin = pin;
         this->state = 0;
         this->oldState = 0;
+        this->isLongPressed = false;
+        this->triggerLongPressed = true;
+        this->lpTrigger = new Trigger(1000);
     }
 
     void init() {
@@ -124,13 +131,36 @@ public:
 
     }
 
-    void update() {
+    void update(uint32_t elapsedMs) {
+        this->isLongPressed = false;
         this->oldState = this->state;
         this->state = this->getIsDown() ? 1 : 0;
+        if (this->getIsDown()
+            && this->triggerLongPressed) {
+            this->lpTrigger->update(elapsedMs);
+            if (this->lpTrigger->isTriggered()) {
+                this->isLongPressed = true;
+                this->triggerLongPressed = false;
+                this->lpTrigger->reset();
+            }
+        }
+        if (this->getIsReleased())
+        {
+            this->triggerLongPressed = true;
+            this->lpTrigger->reset();
+        }
     }
 
     bool getIsPressed() {
         return this->state == 1 && this->state != this->oldState;
+    }
+
+    bool getIsLongPressed() {
+        return this->isLongPressed;
+    }
+
+    bool getIsReleased() {
+        return this->state == 0 && this->state != this->oldState;
     }
 
     bool getIsDown() {
@@ -231,6 +261,10 @@ private:
         return buttons[index]->getIsPressed();
     }
 
+    bool getButtonIsLongPressed(int index) {
+        return buttons[index]->getIsLongPressed();
+    }
+
     bool getButtonIsDown(int index) {
         return buttons[index]->getIsDown();
     }
@@ -283,12 +317,12 @@ private:
         this->colors[2] = new Color("Blue", IR_B);
         this->colors[3] = new Color("Yellow", IR_B13);
         this->colors[4] = new Color("Fucsia", IR_B2);
-        this->currentColor = -1;
+        this->currentColor = (int)EEPROM.read(0);
     }
 
     void updateButtons(uint32_t elapsedMs) {
         for (int i = 0; i < 3; i++) {
-            this->buttons[i]->update();
+            this->buttons[i]->update(elapsedMs);
         }
     }
 
@@ -355,11 +389,15 @@ public:
 
     void init() {
 
+        // Reserve bytes
+        EEPROM.begin(128);
+        delay(50);
+
         this->selectedCocktail = 0;
 
         // Init Relay
         pinMode(RELAY_PIN, OUTPUT);
-        delay(100);
+        delay(50);
         
         // Init buttons
         this->buttons[BUTTON_1] = new Button(BUTTON_1_PIN); //D6 (gpio12)
@@ -367,14 +405,14 @@ public:
         this->buttons[BUTTON_3] = new Button(BUTTON_3_PIN); // D8
         for (int i = 0; i < 3; i++) {
             this->buttons[i]->init();
-            delay(100);
+            delay(50);
         }
 
         // Init IR
         this->ir->begin();
-        delay(100);
-        this->ir->sendNEC(IR_OFF, 32);
-        delay(100);
+        delay(50);
+        //this->ir->sendNEC(IR_OFF, 32);
+        //delay(100);
 
         this->loadCockatails();
         this->loadColors();
@@ -406,27 +444,26 @@ public:
         if (this->getButtonIsPressed(BUTTON_2)) {
             if (this->currentSection == MENU_COLORS) {
                 this->currentColor++;
-                if (this->currentColor == 0) {
-                    this->ir->sendNEC(IR_OFF, 32);
-                    delay(50);
-                }
+                if (this->currentColor > MAX_COLORS - 1)
+                    this->currentColor = 0;
 
-                if (this->currentColor > MAX_COLORS - 1) {
-                    this->currentColor = -1;
-                    this->ir->sendNEC(IR_OFF, 32);
-                    delay(50);
-                }
-                else
-                {
-                    Color *color = this->colors[this->currentColor];
-                    this->ir->sendNEC(color->getValue(), 32);
-                    delay(50);
-                }
+                EEPROM.write(0, (byte)this->currentColor);
+                Color *color = this->colors[this->currentColor];
+                this->ir->sendNEC(color->getValue(), 32);
+                delay(50);
             }
             else {
                 this->currentSection = MENU_COLORS;
                 this->mmTrigger->reset();
             }
+        }
+
+        if (this->getButtonIsLongPressed(BUTTON_2)) {
+            this->ir->sendNEC(IR_OFF, 32);
+            delay(50);
+            Color* color = this->colors[this->currentColor];
+            this->ir->sendNEC(color->getValue(), 32);
+            delay(50);
         }
 
         if (this->getButtonIsPressed(BUTTON_3)) {
