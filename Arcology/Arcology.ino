@@ -317,6 +317,9 @@ private:
         this->colors[2] = new Color("Blue", IR_B);
         this->colors[3] = new Color("Yellow", IR_B13);
         this->colors[4] = new Color("Fucsia", IR_B2);
+        this->colors[5] = new Color("Fade", IR_FADE);
+        this->colors[6] = new Color("Smooth", IR_SMOOTH);
+        this->colors[7] = new Color("Strobe", IR_STROBE);
         this->currentColor = (int)EEPROM.read(0);
     }
 
