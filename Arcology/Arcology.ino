@@ -9,7 +9,7 @@ const int DISPLAY_HEIGHT = 2;
 
 const int MAX_COCKTAILS = 50;
 const int MAX_COCKTAIL_STEPS = 10;
-const int MAX_COLORS = 5;
+const int MAX_COLORS = 8;
 
 const int INTERVAL_COCKTAIL_STEP = 4000;
 const int INTERVAL_BACK_TO_MAINMENU = 5 * 60 * 1000;
