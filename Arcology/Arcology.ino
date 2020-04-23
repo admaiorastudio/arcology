@@ -414,11 +414,16 @@ public:
         // Init IR
         this->ir->begin();
         delay(50);
-        //this->ir->sendNEC(IR_OFF, 32);
-        //delay(100);
+        this->ir->sendNEC(IR_ON, 32);
+        delay(50);
 
         this->loadCockatails();
         this->loadColors();
+
+        // Set current color
+        Color* color = this->colors[this->currentColor];
+        this->ir->sendNEC(color->getValue(), 32);
+        delay(50);
     }
 
     void update(uint32_t elapsedMs) {
@@ -446,14 +451,16 @@ public:
 
         if (this->getButtonIsPressed(BUTTON_2)) {
             if (this->currentSection == MENU_COLORS) {
-                this->currentColor++;
-                if (this->currentColor > MAX_COLORS - 1)
-                    this->currentColor = 0;
+                if (this->currentColor != 255) {
+                    this->currentColor++;
+                    if (this->currentColor > MAX_COLORS - 1)
+                        this->currentColor = 0;
 
-                EEPROM.write(0, (byte)this->currentColor);
-                Color *color = this->colors[this->currentColor];
-                this->ir->sendNEC(color->getValue(), 32);
-                delay(50);
+                    EEPROM.write(0, (byte)this->currentColor);
+                    Color* color = this->colors[this->currentColor];
+                    this->ir->sendNEC(color->getValue(), 32);
+                    delay(50);
+                }
             }
             else {
                 this->currentSection = MENU_COLORS;
@@ -462,11 +469,20 @@ public:
         }
 
         if (this->getButtonIsLongPressed(BUTTON_2)) {
-            this->ir->sendNEC(IR_OFF, 32);
-            delay(50);
-            Color* color = this->colors[this->currentColor];
-            this->ir->sendNEC(color->getValue(), 32);
-            delay(50);
+            if (this->currentColor != 255) {
+                EEPROM.write(0, (byte)this->currentColor);
+                this->currentColor = 255;
+                this->ir->sendNEC(IR_OFF, 32);
+                delay(50);
+            }
+            else {
+                this->currentColor = (int)EEPROM.read(0);
+                this->ir->sendNEC(IR_ON, 32);
+                delay(50);
+                Color* color = this->colors[this->currentColor];
+                this->ir->sendNEC(color->getValue(), 32);
+                delay(50);
+            }
         }
 
         if (this->getButtonIsPressed(BUTTON_3)) {
