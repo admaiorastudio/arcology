@@ -396,6 +396,14 @@ public:
         EEPROM.begin(128);
         delay(50);
 
+       /* 
+         // clear EEPROM if everything goes wrong
+        for (int i = 0; i < 128; i++) {
+        EEPROM.write(i, 0);
+        }
+        EEPROM.commit();
+        
+*/
         this->selectedCocktail = 0;
 
         // Init Relay
@@ -460,6 +468,7 @@ public:
                     Color* color = this->colors[this->currentColor];
                     this->ir->sendNEC(color->getValue(), 32);
                     delay(50);
+                    EEPROM.commit();
                 }
             }
             else {
@@ -474,6 +483,7 @@ public:
                 this->currentColor = 255;
                 this->ir->sendNEC(IR_OFF, 32);
                 delay(50);
+                EEPROM.commit();
             }
             else {
                 this->currentColor = (int)EEPROM.read(0);
