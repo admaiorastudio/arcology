@@ -253,7 +253,7 @@ private:
     IRsend *ir;
     Color *colors[MAX_COLORS];
     int currentColor;
-    int relayStatus = 1;
+    int relayStatus = 0;
     Trigger* mmTrigger;
     Trigger* infoTrigger;
 
@@ -370,10 +370,10 @@ private:
     void drawRelayStatus(Display *display) {
         display->writeCenter(0, "Reactor State");
         if (this->relayStatus == 0) {
-            display->writeCenter(1, "DISABLED");
+            display->writeCenter(1, "ACTIVE");
         }
         else {
-            display->writeCenter(1, "ACTIVE");
+            display->writeCenter(1, "DISABLED");
         }
     }
 
@@ -459,16 +459,17 @@ public:
 
         if (this->getButtonIsPressed(BUTTON_2)) {
             if (this->currentSection == MENU_COLORS) {
-                if (this->currentColor != 255) {
+                if (this->currentColor != -1) {
                     this->currentColor++;
                     if (this->currentColor > MAX_COLORS - 1)
                         this->currentColor = 0;
 
                     EEPROM.write(0, (byte)this->currentColor);
+                    EEPROM.commit();
+                    delay(50);
                     Color* color = this->colors[this->currentColor];
                     this->ir->sendNEC(color->getValue(), 32);
                     delay(50);
-                    EEPROM.commit();
                 }
             }
             else {
@@ -478,14 +479,15 @@ public:
         }
 
         if (this->getButtonIsLongPressed(BUTTON_2)) {
-            if (this->currentColor != 255) {
-                // EEPROM.write(0, (byte)this->currentColor);
+            if (this->currentColor != -1) {
+                EEPROM.write(0, (byte)this->currentColor);
+                EEPROM.commit();
+                delay(50);
                 Serial.print("Shutting off Led");
-                this->currentColor = 255;
+                this->currentColor = -1;
                 this->ir->sendNEC(IR_OFF, 32);
                 delay(50);
-                // EEPROM.commit();
-                Serial.print(" ---- Led has been turned OFF");
+                Serial.print("Led has been turned OFF");
             }
             else {
                 Serial.print("Turning on Led");
@@ -495,7 +497,7 @@ public:
                 Color* color = this->colors[this->currentColor];
                 this->ir->sendNEC(color->getValue(), 32);
                 delay(50);
-                Serial.print(" ---- Led has been turned ON");
+                Serial.print("Led has been turned ON");
             }
         }
 
