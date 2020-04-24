@@ -253,7 +253,7 @@ private:
     IRsend *ir;
     Color *colors[MAX_COLORS];
     int currentColor;
-    int relayStatus = 0;
+    int relayStatus = 1;
     Trigger* mmTrigger;
     Trigger* infoTrigger;
 
@@ -480,20 +480,22 @@ public:
         if (this->getButtonIsLongPressed(BUTTON_2)) {
             if (this->currentColor != 255) {
                 // EEPROM.write(0, (byte)this->currentColor);
-                console.print("Shutting off Led");
+                Serial.print("Shutting off Led");
                 this->currentColor = 255;
                 this->ir->sendNEC(IR_OFF, 32);
                 delay(50);
                 // EEPROM.commit();
+                Serial.print(" ---- Led has been turned OFF");
             }
             else {
-                console.print("Turning off Led");
+                Serial.print("Turning on Led");
                 this->currentColor = (int)EEPROM.read(0);
                 this->ir->sendNEC(IR_ON, 32);
                 delay(50);
                 Color* color = this->colors[this->currentColor];
                 this->ir->sendNEC(color->getValue(), 32);
                 delay(50);
+                Serial.print(" ---- Led has been turned ON");
             }
         }
 
