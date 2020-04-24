@@ -479,13 +479,15 @@ public:
 
         if (this->getButtonIsLongPressed(BUTTON_2)) {
             if (this->currentColor != 255) {
-                EEPROM.write(0, (byte)this->currentColor);
+                // EEPROM.write(0, (byte)this->currentColor);
+                console.print("Shutting off Led");
                 this->currentColor = 255;
                 this->ir->sendNEC(IR_OFF, 32);
                 delay(50);
-                EEPROM.commit();
+                // EEPROM.commit();
             }
             else {
+                console.print("Turning off Led");
                 this->currentColor = (int)EEPROM.read(0);
                 this->ir->sendNEC(IR_ON, 32);
                 delay(50);
