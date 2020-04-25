@@ -277,6 +277,28 @@ private:
         }
     }
 
+    /*
+    Whiskey Sour        XBourbon         succo limone        sciroppo di zucchero
+    Gin fizz            Gin             succo limone        sciroppo di zucchero        soda
+    Mohito              Rum Bianco      Angostura           Succo limone                Soda        Zucchero di canna       Menta
+    Black Russian       Vodka           XKalhua
+    Cuba libre          XRum scuro       XCoca cocktail       Succo di lime
+    Margarita           Tequila         Triple Sec          Succo di lime
+    Spritz              Prosecco        Aperol              Soda
+    Americano           Martini Rosso   Bitter Campari      Soda
+    Dry Martini         Gin             Vermouth Dry        (+olive e scorza limone)
+    Caipirinha          Cachaca         Zucchero di canna   Lime
+    Daiquiri            Rum Bianco      Succo di lime       Sciroppo di Zucchero
+    Sex on the beach    Vodka           Liquore alla pesca  Succo arancia               Succo di mirtillo
+    Moscow mule         Vodka           Ginger beer         succo di lime
+    Gin Tonic           Gin             Acqua Tonica        Angostura  
+    Negroni             Gin             Campari             Vermouth Rosso              Arance
+
+
+
+
+    */
+
     void addGinTonic() {
         const int count = 3;
         String* steps[count];
